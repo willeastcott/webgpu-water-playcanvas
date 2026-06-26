@@ -1,5 +1,7 @@
 # WebGL Water — PlayCanvas port
 
+<img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/649cd6c8-e9b6-45ca-babd-5bee6d201f83" />
+
 A port of [Evan Wallace's WebGL Water](http://madebyevan.com/webgl-water/) (2011)
 to the [PlayCanvas Engine](https://playcanvas.com/). It reproduces the original
 demo's rendering and physics:
