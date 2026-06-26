@@ -2,7 +2,7 @@ import {
     Texture, RenderTarget, ShaderUtils, drawQuadWithShader,
     SEMANTIC_POSITION,
     PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16F,
-    FILTER_LINEAR, FILTER_NEAREST, ADDRESS_CLAMP_TO_EDGE
+    FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE
 } from 'playcanvas';
 
 import {
@@ -26,16 +26,18 @@ const SIZE = 256;
  * two buffers are swapped.
  */
 export class Water {
-    constructor(device) {
+    constructor(device, forceHalfFloat = false) {
         this.device = device;
 
-        // Prefer full 32-bit float; fall back to 16-bit half-float (e.g. iOS).
-        // Half-float is linear-filterable by default on WebGL2; full float needs
-        // the explicit capability.
-        const useFloat = device.textureFloatRenderable;
-        const format = useFloat ? PIXELFORMAT_RGBA32F : PIXELFORMAT_RGBA16F;
-        const filterable = useFloat ? device.textureFloatFilterable : true;
-        const filter = filterable ? FILTER_LINEAR : FILTER_NEAREST;
+        // Use 32-bit float only when the device can also FILTER it. iOS reports
+        // rgba32float as renderable but NOT filterable, and a non-filterable
+        // float texture view can't bind to the shaders' filtering sampler, so
+        // createBindGroup fails on WebGPU and the scene is blank. 16-bit float
+        // is renderable and filterable everywhere we target, so it's the safe
+        // fallback. (?half forces it, to exercise this path on desktop.)
+        const useFloat32 = !forceHalfFloat && device.textureFloatRenderable && device.textureFloatFilterable;
+        const format = useFloat32 ? PIXELFORMAT_RGBA32F : PIXELFORMAT_RGBA16F;
+        const filter = FILTER_LINEAR;
 
         const makeTexture = (name) => new Texture(device, {
             name,

@@ -115,7 +115,7 @@ let lKeyDown = false;
         createSkyCubemap(device)
     ]);
 
-    const water = new Water(device);
+    const water = new Water(device, params.has('half'));
     const renderer = new Renderer(app, tileTexture, skyCubemap);
 
     // Main camera: fixed-distance orbit, raw (un-tonemapped) output to match
