@@ -70,10 +70,19 @@ let lKeyDown = false;
     // Prefer WebGPU, fall back to WebGL2. Every shader ships both GLSL (used on
     // WebGL2) and WGSL (used directly on WebGPU), so no runtime GLSL→WGSL
     // transpilation is needed and the glslang/twgsl WASM is not loaded.
-    const device = await createGraphicsDevice(canvas, {
-        deviceTypes: [DEVICETYPE_WEBGPU, DEVICETYPE_WEBGL2]
-    });
+    //
+    // The backend can be forced from the URL for debugging - ?webgl or ?webgpu -
+    // e.g. to check whether a device-specific failure (a black screen on iOS) is
+    // WebGPU-only or also reproduces on WebGL2.
+    const params = new URLSearchParams(location.search);
+    let deviceTypes = [DEVICETYPE_WEBGPU, DEVICETYPE_WEBGL2];
+    if (params.has('webgl')) deviceTypes = [DEVICETYPE_WEBGL2];
+    else if (params.has('webgpu')) deviceTypes = [DEVICETYPE_WEBGPU];
+
+    const device = await createGraphicsDevice(canvas, { deviceTypes });
     device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
+    // eslint-disable-next-line no-console
+    console.log(`Graphics backend: ${device.isWebGPU ? 'WebGPU' : 'WebGL2'}`);
 
     const createOptions = new AppOptions();
     createOptions.graphicsDevice = device;

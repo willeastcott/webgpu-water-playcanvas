@@ -10,6 +10,17 @@ Copyright 2011 Evan Wallace - released under the MIT license.
   <meta charset="UTF-8" />
   <title>WebGPU Water - PlayCanvas</title>
   <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+  <!-- On-screen console for debugging on devices with no dev tools (e.g. iOS
+       without a Mac). Enable by adding ?debug to the URL; tap the floating
+       button, then the Console tab, to read errors right on the device. -->
+  <script>
+    if (/[?&]debug\b/.test(location.search)) {
+      var s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/eruda';
+      s.onload = function () { window.eruda && eruda.init(); };
+      document.head.appendChild(s);
+    }
+  </script>
   <style>
     body { margin: 0; font: 13px/140% Arial, sans-serif; background: black; color: white; overflow: hidden; }
     a { color: inherit; cursor: pointer; }
