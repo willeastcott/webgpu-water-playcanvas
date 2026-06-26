@@ -1,4 +1,4 @@
-# WebGL Water — PlayCanvas port
+# WebGPU Water — A PlayCanvas port of WebGL Water
 
 <img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/649cd6c8-e9b6-45ca-babd-5bee6d201f83" />
 
