@@ -212,7 +212,13 @@ export const causticsFragmentGLSL = commonConstants + /* glsl */`
     /* if the triangle gets smaller, it gets brighter, and vice versa */
     float oldArea = length(dFdx(oldPos)) * length(dFdy(oldPos));
     float newArea = length(dFdx(newPos)) * length(dFdy(newPos));
-    vec4 color = vec4(oldArea / newArea * 0.2, 1.0, 0.0, 0.0);
+
+    /* On steep ripples newArea collapses toward zero, spiking the brightness to
+       saturation so the caustics flash. max() guards the divide (degenerate /
+       total-internal-reflection facets give a zero area); the clamp caps the
+       focus gain so foci stay bright without popping to white. */
+    float caustic = min(oldArea / max(newArea, 1.0e-9), 3.0) * 0.2;
+    vec4 color = vec4(caustic, 1.0, 0.0, 0.0);
 
     vec3 refractedLight = refract(-light, vec3(0.0, 1.0, 0.0), IOR_AIR / IOR_WATER);
 

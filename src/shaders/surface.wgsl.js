@@ -223,7 +223,12 @@ export const causticsFragmentWGSL = commonConstants + /* wgsl */`
     /* if the triangle gets smaller, it gets brighter, and vice versa */
     let oldArea = length(dpdx(input.oldPos)) * length(dpdy(input.oldPos));
     let newArea = length(dpdx(input.newPos)) * length(dpdy(input.newPos));
-    var color = vec4f(oldArea / newArea * 0.2, 1.0, 0.0, 0.0);
+
+    // Clamp the focus gain (see GLSL): steep ripples collapse newArea toward
+    // zero, which spikes the intensity to saturation and flashes; max() also
+    // guards the divide against degenerate / total-internal-reflection facets.
+    let caustic = min(oldArea / max(newArea, 1.0e-9), 3.0) * 0.2;
+    var color = vec4f(caustic, 1.0, 0.0, 0.0);
 
     let refractedLight = refract(-uniform.light, vec3f(0.0, 1.0, 0.0), IOR_AIR / IOR_WATER);
 
