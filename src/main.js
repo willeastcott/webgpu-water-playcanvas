@@ -81,8 +81,19 @@ let lKeyDown = false;
 
     const device = await createGraphicsDevice(canvas, { deviceTypes });
     device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
-    // eslint-disable-next-line no-console
+    /* eslint-disable no-console */
     console.log(`Graphics backend: ${device.isWebGPU ? 'WebGPU' : 'WebGL2'}`);
+
+    // The engine surfaces WebGPU errors via Debug.*, which is stripped from the
+    // production build - so failures like a silent black screen on iOS leave
+    // nothing in the console. Re-surface them ourselves (visible via ?debug).
+    if (device.isWebGPU) {
+        console.log(`Float RT renderable: ${device.textureFloatRenderable}, filterable: ${device.textureFloatFilterable}`);
+        device.wgpu?.addEventListener?.('uncapturederror', (ev) => {
+            console.error('WebGPU error:', ev.error?.message ?? ev.error);
+        });
+    }
+    /* eslint-enable no-console */
 
     const createOptions = new AppOptions();
     createOptions.graphicsDevice = device;
