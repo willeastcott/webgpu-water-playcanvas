@@ -203,7 +203,13 @@ export const causticsVertexWGSL = commonConstants + /* wgsl */`
     output.oldPos = project(input.aPosition.xzy, refractedLight, refractedLight);
     output.newPos = project(input.aPosition.xzy + vec3f(0.0, info.r, 0.0), rayv, refractedLight);
 
-    output.position = vec4f(0.75 * (output.newPos.xz + refractedLight.xz / refractedLight.y), 0.0, 1.0);
+    // WebGPU rasterises clip-space +Y to the top texel, but the surface shaders
+    // sample the caustics with uv.v = ndc.y * 0.5 + 0.5 (which the GLSL/WebGL2
+    // path lines up with). Negate Y here so the WebGPU caustic write matches
+    // that sampling - otherwise the caustics (and the sphere shadow) are
+    // mirrored in Z, so the shadow slides opposite to the ball.
+    let causticNdc = 0.75 * (output.newPos.xz + refractedLight.xz / refractedLight.y);
+    output.position = vec4f(causticNdc.x, -causticNdc.y, 0.0, 1.0);
     return output;
   }
 `;
