@@ -35,9 +35,13 @@ function showError(message) {
 window.addEventListener('unhandledrejection', e => showError(e.reason && e.reason.stack || e.reason));
 window.addEventListener('error', e => showError(e.error && e.error.stack || e.message));
 
-// --- Camera orbit state (fixed distance, like the original) -----------------
+// --- Camera orbit state -----------------------------------------------------
+// The original demo used a fixed distance; here the scroll wheel zooms within
+// a clamped range so you can move in closer without losing the scene.
 const CAMERA_TARGET = new Vec3(0, -0.5, 0);
-const CAMERA_DISTANCE = 4;
+const CAMERA_MIN_DISTANCE = 1.5;
+const CAMERA_MAX_DISTANCE = 6;
+let cameraDistance = 4;
 let angleX = -25;
 let angleY = -200.5;
 
@@ -167,7 +171,7 @@ let lKeyDown = false;
     const _qy = new Quat();
     const _q = new Quat();
     function applyCamera() {
-        _offset.set(0, 0, CAMERA_DISTANCE);
+        _offset.set(0, 0, cameraDistance);
         _qx.setFromAxisAngle(Vec3.RIGHT, angleX);
         _qy.setFromAxisAngle(Vec3.UP, angleY);
         _q.mul2(_qy, _qx);
@@ -307,6 +311,15 @@ let lKeyDown = false;
     };
     canvas.addEventListener('pointerup', endPointer);
     canvas.addEventListener('pointercancel', endPointer);
+
+    // Scroll to zoom. Multiplicative steps feel uniform across the range; the
+    // result is clamped so the scene can't be lost. preventDefault stops the
+    // page from scrolling, so the listener must be non-passive.
+    canvas.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        cameraDistance *= Math.exp(e.deltaY * 0.001);
+        cameraDistance = Math.max(CAMERA_MIN_DISTANCE, Math.min(CAMERA_MAX_DISTANCE, cameraDistance));
+    }, { passive: false });
 
     window.addEventListener('keydown', (e) => {
         if (e.key === ' ') {
