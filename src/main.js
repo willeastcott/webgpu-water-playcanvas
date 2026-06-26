@@ -192,6 +192,11 @@ let lKeyDown = false;
     const _t1 = new Vec3();
     const _t2 = new Vec3();
 
+    // Previous water-plane hit while drawing, so drops are swept into a trail.
+    let hasDragPoint = false;
+    let dragX = 0;
+    let dragZ = 0;
+
     // Builds an eye + (normalised) ray for a canvas pixel. The result is stored
     // in the passed-in vectors to avoid allocation.
     function getRay(px, py, outEye, outRay) {
@@ -225,6 +230,7 @@ let lKeyDown = false;
     function startDrag(px, py) {
         oldX = px;
         oldY = py;
+        hasDragPoint = false;
         getRay(px, py, _eye, _ray);
 
         if (hitTestSphere(_eye, _ray, center, radius, _hit)) {
@@ -254,7 +260,16 @@ let lKeyDown = false;
                 const t = -_eye.y / _ray.y;
                 const wx = _eye.x + _ray.x * t;
                 const wz = _eye.z + _ray.z * t;
-                water.addDrop(wx, wz, 0.03, 0.01);
+                // Sweep from the previous sample to this one so a fast drag is a
+                // continuous trail, not a row of taps; the first sample is a point.
+                if (hasDragPoint) {
+                    water.addLine(dragX, dragZ, wx, wz, 0.03, 0.01);
+                } else {
+                    water.addDrop(wx, wz, 0.03, 0.01);
+                    hasDragPoint = true;
+                }
+                dragX = wx;
+                dragZ = wz;
                 if (paused) water.updateNormals();
                 break;
             }

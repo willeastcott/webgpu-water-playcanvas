@@ -72,6 +72,7 @@ export class Water {
 
         this._delta = new Float32Array([1 / SIZE, 1 / SIZE]);
         this._center = new Float32Array(2);
+        this._center2 = new Float32Array(2);
         this._old = new Float32Array(3);
         this._new = new Float32Array(3);
 
@@ -100,10 +101,22 @@ export class Water {
 
     /** Add a circular ripple centred at simulation coords (x, y) in [-1, 1]. */
     addDrop(x, y, radius, strength) {
+        this.addLine(x, y, x, y, radius, strength);
+    }
+
+    /**
+     * Add a ripple swept along the segment (x0, y0) -> (x1, y1) in [-1, 1] so a
+     * dragged pointer leaves a continuous trail instead of separate drops. A
+     * zero-length segment is a single drop (see `addDrop`).
+     */
+    addLine(x0, y0, x1, y1, radius, strength) {
         const { device } = this;
-        this._center[0] = x;
-        this._center[1] = y;
+        this._center[0] = x0;
+        this._center[1] = y0;
+        this._center2[0] = x1;
+        this._center2[1] = y1;
         device.scope.resolve('center').setValue(this._center);
+        device.scope.resolve('center2').setValue(this._center2);
         device.scope.resolve('radius').setValue(radius);
         device.scope.resolve('strength').setValue(strength);
         this._pass(this.dropShader);

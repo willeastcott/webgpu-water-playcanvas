@@ -29,11 +29,14 @@ export const clearFragmentGLSL = /* glsl */`
   }
 `;
 
-// Add an interactive drop: a smooth (raised-cosine) bump added to the height.
+// Add an interactive ripple: a raised-cosine bump swept along the segment
+// center -> center2, so a dragged pointer leaves a continuous trail. When the
+// two endpoints are equal it collapses to the original single point drop.
 export const dropFragmentGLSL = /* glsl */`
   const float PI = 3.141592653589793;
   uniform sampler2D uSource;
   uniform vec2 center;
+  uniform vec2 center2;
   uniform float radius;
   uniform float strength;
   varying vec2 coord;
@@ -41,8 +44,16 @@ export const dropFragmentGLSL = /* glsl */`
     /* get vertex info */
     vec4 info = texture2D(uSource, coord);
 
-    /* add the drop to the height */
-    float drop = max(0.0, 1.0 - length(center * 0.5 + 0.5 - coord) / radius);
+    /* distance from this texel to the drag segment (center -> center2) */
+    vec2 a = center * 0.5 + 0.5;
+    vec2 b = center2 * 0.5 + 0.5;
+    vec2 pa = coord - a;
+    vec2 ba = b - a;
+    float denom = dot(ba, ba);
+    float h = denom > 0.0 ? clamp(dot(pa, ba) / denom, 0.0, 1.0) : 0.0;
+
+    /* add the raised-cosine ripple along that segment */
+    float drop = max(0.0, 1.0 - length(pa - ba * h) / radius);
     drop = 0.5 - cos(drop * PI) * 0.5;
     info.r += drop * strength;
 

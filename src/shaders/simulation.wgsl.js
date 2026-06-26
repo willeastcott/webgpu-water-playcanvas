@@ -28,18 +28,30 @@ export const clearFragmentWGSL = /* wgsl */`
   }
 `;
 
-// Add an interactive drop (raised-cosine bump).
+// Add an interactive ripple: a raised-cosine bump swept along the segment
+// center -> center2 (a single point drop when the two endpoints are equal).
 export const dropFragmentWGSL = /* wgsl */`
   var uSource: texture_2d<f32>;
   var uSourceSampler: sampler;
   uniform center: vec2f;
+  uniform center2: vec2f;
   uniform radius: f32;
   uniform strength: f32;
   varying coord: vec2f;
   const PI: f32 = 3.141592653589793;
   @fragment fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     var info = textureSampleLevel(uSource, uSourceSampler, input.coord, 0.0);
-    var drop = max(0.0, 1.0 - length(uniform.center * 0.5 + vec2f(0.5) - input.coord) / uniform.radius);
+
+    // distance from this texel to the drag segment (center -> center2)
+    let a = uniform.center * 0.5 + vec2f(0.5);
+    let b = uniform.center2 * 0.5 + vec2f(0.5);
+    let pa = input.coord - a;
+    let ba = b - a;
+    let denom = dot(ba, ba);
+    var h = 0.0;
+    if (denom > 0.0) { h = clamp(dot(pa, ba) / denom, 0.0, 1.0); }
+
+    var drop = max(0.0, 1.0 - length(pa - ba * h) / uniform.radius);
     drop = 0.5 - cos(drop * PI) * 0.5;
     info.r = info.r + drop * uniform.strength;
     var output: FragmentOutput;
